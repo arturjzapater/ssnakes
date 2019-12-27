@@ -1,0 +1,27 @@
+{
+  "name": "ssnakes",
+  "version": "1.0.0",
+  "description": "A multiplayer snake game",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "snake",
+    "game",
+    "multiplayer",
+    "hyperapp"
+  ],
+  "contributors": [
+    "SavagePixie",
+    "Avalander"
+  ],
+  "license": "ISC",
+  "devDependencies": {
+    "hyperapp": "^1.2.8",
+    "hyperapp-fx": "^1.0.0"
+  },
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
