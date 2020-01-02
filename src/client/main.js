@@ -9,11 +9,13 @@ socket.addEventListener('open', () => {
 			nickname: `Mr Potato-${Date.now()}`,
 		}
 	}))
+	console.log(socket)
 })
 
 const message_handlers = {
 	'login-response': ({ nickname }) => console.log('login-response:', nickname),
 	'new-player': ({ nickname }) => console.log('new-player:', nickname),
+	'disconnected-player': ({ nickname }) => console.log('disconnected-player:', nickname),
 }
 
 socket.addEventListener('message', event => {

@@ -28,6 +28,7 @@ server.on('connection', socket => {
 
 	socket.on('close', () => {
 		connected.splice(connected.indexOf(socket), 1)
+		messageHandlers.logout(socket, { nickname: socket.nickname })
 	})
 })
 
@@ -39,6 +40,9 @@ const messageHandlers = {
 			payload: { nickname }
 		}))
 		broadcast(newPlayer(nickname), [ socket ])
+	},
+	logout: (socket, { nickname }) => {
+		broadcast(disconnectedPlayer(nickname))
 	}
 }
 
@@ -53,7 +57,12 @@ const broadcast = (message, exclude = []) => {
 // Messages
 const newPlayer = nickname => ({
 	type: 'new-player',
-	payload: { nickname }
+	payload: { nickname },
+})
+
+const disconnectedPlayer = nickname => ({
+	type: 'disconnected-player',
+	payload: { nickname },
 })
   
 
