@@ -6,7 +6,6 @@ const path = require('path')
 
 const {
 	delay,
-	tryCatch,
 	zip,
 } = require('./utils')
 
@@ -89,37 +88,15 @@ const runSerial = tests =>
 
 const runTests = () => runSerial([
 	test('A new player can login', () =>
-		new Promise((resolve, reject) => {
-			const ws = new WebSocket(`ws://localhost:${PORT}`)
-			ws.onopen = () => {
-				console.log('Connected to server')
-				ws.send(login('Fluttershy'))
-			}
-			ws.onmessage = event => {
-				const { type, payload } = JSON.parse(event.data)
-				// This needs to be done because `assert.*` functions throw errors
-				// when something is not equal, but since this a callback sent to ws.onmessage
-				// the exception will not be wrapped normally within the promise.
-				tryCatch(() => {
-					assert.strictEqual(type, 'login-response')
-					assert.deepEqual(payload, {
+		runConnection(login('Fluttershy'), 500)
+			.then(events => {
+				assert.deepEqual(events, [{
+					type: 'login-response',
+					payload: {
 						nickname: 'Fluttershy',
-					})
-				})
-				.then(() => {
-					ws.close()
-					resolve()
-				})
-				.catch(reject)
-			}
-			ws.onclose = () => {
-				console.log('Connection terminated')
-			}
-			ws.onerror = error => {
-				ws.close()
-				reject(error)
-			}
-		})
+					},
+				}])
+			})
 	),
 	test('Two players can login', () =>
 		Promise
