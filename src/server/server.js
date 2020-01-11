@@ -2,6 +2,14 @@
 const express = require('express')
 const { Server } = require('ws')
 
+const {
+	disconnectedPlayer,
+	gameStart,
+    loginError,
+    loginResponse,
+    newPlayer,
+} = require('./messages')
+
 const { PORT } = process.env
 
 const app = express()
@@ -17,31 +25,50 @@ const server = new Server({
 })
 
 const connected = []
+let gameStarted = false
 
 server.on('connection', socket => {
 	connected.push(socket)
 
+	const send = message => {
+		const data = typeof message === 'string'
+			? message
+			: JSON.stringify(message)
+		socket.send(data)
+	}
+
 	socket.on('message', message => {
 		const { type, payload } = JSON.parse(message)
-		messageHandlers[type](socket, payload)
+		messageHandlers[type](socket, send, payload)
 	})
 
 	socket.on('close', () => {
 		connected.splice(connected.indexOf(socket), 1)
-		messageHandlers.logout(socket, { nickname: socket.nickname })
+		messageHandlers.logout(socket, send, { nickname: socket.nickname })
 	})
 })
 
 const messageHandlers = {
-	login: (socket, { nickname }) => {
+	login: (socket, send, { nickname }) => {
+		if (connected.find(socket => socket.nickname === nickname)) {
+			send(loginError('Nickname already taken'))
+			return
+		}
+
 		socket.nickname = nickname
-		socket.send(JSON.stringify({
-			type: 'login-response',
-			payload: { nickname }
-		}))
+		socket.player = connected.length <= 2
+		send(loginResponse(nickname))
 		broadcast(newPlayer(nickname), [ socket ])
+
+		if (connected.length >= 2 && !gameStarted) {
+			const players = connected
+				.filter(x => x.player)
+				.map(x => x.nickname)
+			broadcast(gameStart(Date.now(), players))
+			gameStarted = true
+		}
 	},
-	logout: (socket, { nickname }) => {
+	logout: (socket, send, { nickname }) => {
 		broadcast(disconnectedPlayer(nickname))
 	}
 }
@@ -53,55 +80,3 @@ const broadcast = (message, exclude = []) => {
 		client.send(data)
 	})
 }
-
-// Messages
-const newPlayer = nickname => ({
-	type: 'new-player',
-	payload: { nickname },
-})
-
-const disconnectedPlayer = nickname => ({
-	type: 'disconnected-player',
-	payload: { nickname },
-})
-  
-
-
-
-/*
-  const connected = []
-  
-  server.on('connection', socket => {
-	let nickname = ''
-  
-	socket.on('message', message => {
-	  console.log(`Message received: ${message}`)
-	  const data = JSON.parse(message)
-	  if (data.type === 'open-connection') {
-		nickname = data.nickname
-		socket.send(JSON.stringify({
-		  type: 'welcome',
-		  message: `Welcome to the chat, ${nickname}`
-		}))
-		connected.push(nickname)
-		broadcast(JSON.stringify({
-		  type: 'participants',
-		  participants: connected
-		}))
-	  }
-	  broadcast(message, [ socket ])
-	})
-  
-	socket.on('close', () => {
-	  connected.splice(connected.indexOf(nickname), 1)
-	  broadcast(JSON.stringify({
-		type: 'close-connection',
-		nickname,
-	  }))
-	  broadcast(JSON.stringify({
-		type: 'participants',
-		participants: connected
-	  }))
-	})
-  })
- */ 

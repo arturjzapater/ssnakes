@@ -13,9 +13,11 @@ socket.addEventListener('open', () => {
 })
 
 const message_handlers = {
+	'login-error': ({ message }) => console.log('login-error', message),
 	'login-response': ({ nickname }) => console.log('login-response:', nickname),
 	'new-player': ({ nickname }) => console.log('new-player:', nickname),
 	'disconnected-player': ({ nickname }) => console.log('disconnected-player:', nickname),
+	'game-start': ({ timestamp, players }) => console.log('game-start:', timestamp, players)
 }
 
 socket.addEventListener('message', event => {
