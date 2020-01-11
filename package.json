@@ -2,8 +2,9 @@
   "name": "ssnakes",
   "version": "1.0.0",
   "description": "A multiplayer snake game",
-  "main": "server.js",
+  "main": "src/server/server.js",
   "scripts": {
+    "start": "PORT=3000 node src/server/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -26,6 +27,7 @@
     "hyperapp-fx": "^1.0.0"
   },
   "dependencies": {
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "ws": "^7.2.1"
   }
 }
