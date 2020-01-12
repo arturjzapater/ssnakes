@@ -2,9 +2,9 @@
 
 const assert = require('assert')
 
-const { zip } = require('./utils')
-const suite = require('./runtime')
-const { login } = require('./fixtures')
+const { zip } = require('../utils')
+const suite = require('../runtime')
+const { login } = require('../fixtures')
 
 const WebSocket = require('ws')
 

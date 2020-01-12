@@ -2,6 +2,8 @@ module.exports.delay = ms => data => new Promise(resolve => {
 	setTimeout(() => resolve(data), ms)
 })
 
+module.exports.exists = value => value != null
+
 module.exports.tryCatch = fn => {
 	try {
 		const result = fn()
