@@ -6,7 +6,7 @@
   "scripts": {
     "start": "PORT=3000 node src/server/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "test:integration": "PORT=3030 node test/integration/login-flow.spec.js"
+    "test:integration": "PORT=3030 node test/integration/runner.js"
   },
   "repository": {
     "type": "git",
