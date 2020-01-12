@@ -1,50 +1,15 @@
 'use strict'
 
 const assert = require('assert')
-const { fork } = require('child_process')
-const path = require('path')
 
-const {
-	delay,
-	zip,
-} = require('./utils')
-
+const { zip } = require('./utils')
+const suite = require('./runtime')
 const { login } = require('./fixtures')
 
 const WebSocket = require('ws')
 
 const { PORT } = process.env
 
-
-const test = (description, fn) => () =>
-	Promise.resolve()
-		.then(fn)
-		.then(() => {
-			console.log(`\n\x1b[32m * OK   - ${description}\x1b[0m`)
-		})
-		.catch(error => {
-			console.log(`\n\x1b[31m * FAIL - ${description}`)
-			console.log(error)
-			console.log('\x1b[0m')
-		})
-
-const TEST_TIMEOUT = 2000
-
-const main = () => {
-	const server = fork(path.resolve(__dirname, '..', '..', 'src', 'server', 'server.js'), [], {
-		detached: true,
-		env: { PORT },
-	})
-	server.on('error', error => {
-		console.log('Error', error)
-		server.kill()
-	})
-	delay(500) ()
-		.then(runTests)
-		.then(() => {
-			server.kill()
-		})
-}
 
 const openConnection = () => new Promise((resolve, reject) => {
 	const ws = new WebSocket(`ws://localhost:${PORT}`)
@@ -57,10 +22,10 @@ const openConnection = () => new Promise((resolve, reject) => {
 	}
 })
 
-const runConnection = (messages, timeout = TEST_TIMEOUT) => {
+const runConnection = (messages, timeout = 500) => {
 	const messagesList = Array.isArray(messages)
 		? messages
-		: [ messages ]
+		: [messages]
 	return openConnection()
 		.then(ws => new Promise((resolve, reject) => {
 			const received = []
@@ -78,15 +43,7 @@ const runConnection = (messages, timeout = TEST_TIMEOUT) => {
 		}))
 }
 
-const runSerial = tests =>
-	tests.reduce(
-		(prev, t) => prev
-			.then(t)
-			.catch(t),
-		Promise.resolve()
-	)
-
-const runTests = () => runSerial([
+suite('Login flow', test => {
 	test('A new player can login', () =>
 		runConnection(login('Fluttershy'), 500)
 			.then(events => {
@@ -97,7 +54,8 @@ const runTests = () => runSerial([
 					},
 				}])
 			})
-	),
+	)
+
 	test('Two players can login', () =>
 		Promise
 			.all([
@@ -105,15 +63,12 @@ const runTests = () => runSerial([
 				runConnection(login('Rainbow Dash'), 500),
 			])
 			.then(players => {
-				zip([ 'Fluttershy', 'Rainbow Dash' ], players)
-					.forEach(([ nickname, events ]) => {
-						const event = events.find(({ type }) => type === 'login-response')	
+				zip(['Fluttershy', 'Rainbow Dash'], players)
+					.forEach(([nickname, events]) => {
+						const event = events.find(({ type }) => type === 'login-response')
 						assert.ok(event != null)
 						assert.deepEqual(event.payload, { nickname })
 					})
 			})
-	),
-])
-
-main()
-
+	)
+}).runWithServer(PORT)

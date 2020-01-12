@@ -80,3 +80,8 @@ const broadcast = (message, exclude = []) => {
 		client.send(data)
 	})
 }
+
+process.on('SIGTERM', () => {
+	console.log('Bye.')
+	process.exit(0)
+})
